@@ -12,35 +12,42 @@ export const metadata: Metadata = {
   title: "Repositories · Dashboard",
 };
 
+function ReposNotConnected() {
+  return (
+    <div className="flex flex-1 flex-col items-center justify-center gap-4 p-6">
+      <p className="text-sm text-muted-foreground">
+        Install the GitHub App first to see your repositories.
+      </p>
+      <Button nativeButton={false} render={<Link href={DASHBOARD_ROUTES.github} />}>
+        Go to GitHub App
+      </Button>
+    </div>
+  );
+}
+
 export default async function DashboardReposPage() {
   const session = await requireAuth();
   const installation = await getInstallationStatus(session.user.id);
 
+  const header = (
+    <DashboardHeader
+      title="Repositories"
+      description="All public and private repositories available to the GitHub App."
+    />
+  );
+
   if (!installation.connected) {
     return (
       <>
-        <DashboardHeader
-          title="Repositories"
-          description="All public and private repositories available to the GitHub App."
-        />
-        <div className="flex flex-1 flex-col items-center justify-center gap-4 p-6">
-          <p className="text-sm text-muted-foreground">
-            Install the GitHub App first to see your repositories.
-          </p>
-          <Button nativeButton={false} render={<Link href={DASHBOARD_ROUTES.github} />}>
-            Go to GitHub App
-          </Button>
-        </div>
+        {header}
+        <ReposNotConnected />
       </>
     );
   }
 
   return (
     <>
-      <DashboardHeader
-        title="Repositories"
-        description="All public and private repositories available to the GitHub App."
-      />
+      {header}
       <ReposList />
     </>
   );

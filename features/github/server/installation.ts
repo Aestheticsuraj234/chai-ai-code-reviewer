@@ -2,6 +2,28 @@ import type { GithubInstallationStatus } from "@/features/dashboard/lib/types";
 import { getGithubApp } from "@/features/github/utils/github-app";
 import { prisma } from "@/lib/db";
 
+function getAccountLogin(
+  account: { login?: string; slug?: string } | null | undefined
+): string | null {
+  if (!account) {
+    return null;
+  }
+
+  if ("login" in account && account.login) {
+    return account.login;
+  }
+
+  if (account.slug) {
+    return account.slug;
+  }
+
+  return null;
+}
+
+function buildDisconnectedStatus(): GithubInstallationStatus {
+  return { connected: false, accountLogin: null, installedAt: null };
+}
+
 export async function getInstallationStatus(
   userId: string
 ): Promise<GithubInstallationStatus> {
@@ -10,7 +32,7 @@ export async function getInstallationStatus(
   });
 
   if (!installation) {
-    return { connected: false, accountLogin: null, installedAt: null };
+    return buildDisconnectedStatus();
   }
 
   return {
@@ -27,9 +49,7 @@ export async function saveInstallation(userId: string, installationId: number) {
     { installation_id: installationId }
   );
 
-  const account = data.account;
-  const accountLogin =
-    account && "login" in account ? account.login : account?.slug ?? null;
+  const accountLogin = getAccountLogin(data.account);
 
   await prisma.githubInstallation.upsert({
     where: { userId },
@@ -57,5 +77,9 @@ export async function getUserInstallationId(userId: string) {
     select: { installationId: true },
   });
 
-  return installation?.installationId ?? null;
+  if (!installation) {
+    return null;
+  }
+
+  return installation.installationId;
 }

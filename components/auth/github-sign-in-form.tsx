@@ -21,6 +21,14 @@ function GitHubIcon() {
 function SubmitButton() {
   const { pending } = useFormStatus();
 
+  let buttonLabel = "Continue with GitHub";
+  let buttonIcon = <GitHubIcon />;
+
+  if (pending) {
+    buttonLabel = "Redirecting to GitHub…";
+    buttonIcon = <Spinner className="size-4" />;
+  }
+
   return (
     <Button
       type="submit"
@@ -29,12 +37,8 @@ function SubmitButton() {
       disabled={pending}
       aria-busy={pending}
     >
-      {pending ? (
-        <Spinner className="size-4" />
-      ) : (
-        <GitHubIcon />
-      )}
-      {pending ? "Redirecting to GitHub…" : "Continue with GitHub"}
+      {buttonIcon}
+      {buttonLabel}
     </Button>
   );
 }
