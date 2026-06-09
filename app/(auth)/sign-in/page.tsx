@@ -20,7 +20,13 @@ export const metadata: Metadata = {
   description: "Sign in to Chai AI Code Reviewer with your GitHub account.",
 };
 
-export default function SignInPage() {
+type SignInPageProps = {
+  searchParams: Promise<{ callbackUrl?: string }>;
+};
+
+export default async function SignInPage({ searchParams }: SignInPageProps) {
+  const { callbackUrl } = await searchParams;
+
   return (
     <Card className="border-border/80 shadow-sm">
       <CardHeader className="items-center text-center">
@@ -43,7 +49,7 @@ export default function SignInPage() {
         <FieldSet>
           <FieldGroup>
             <Field>
-              <GithubSignInForm />
+              <GithubSignInForm callbackUrl={callbackUrl} />
               <FieldDescription className="text-center">
                 We only request the permissions needed to identify your
                 account. You can revoke access anytime from GitHub settings.

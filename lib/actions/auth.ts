@@ -1,15 +1,20 @@
 "use server";
 
 import { auth } from "@/lib/auth";
-import { DEFAULT_AUTH_CALLBACK } from "@/lib/auth-routes";
+import { getSafeCallbackPath } from "@/lib/auth-routes";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
-export async function signInWithGithub() {
+export async function signInWithGithub(formData: FormData) {
+  const callbackUrl = formData.get("callbackUrl");
+  const redirectTo = getSafeCallbackPath(
+    typeof callbackUrl === "string" ? callbackUrl : null
+  );
+
   const result = await auth.api.signInSocial({
     body: {
       provider: "github",
-      callbackURL: DEFAULT_AUTH_CALLBACK,
+      callbackURL: redirectTo,
     },
     headers: await headers(),
   });

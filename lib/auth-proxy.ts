@@ -1,10 +1,10 @@
+import { auth } from "@/lib/auth";
 import {
-  DEFAULT_AUTH_CALLBACK,
+  getSafeCallbackPath,
   isAuthPath,
   isPublicPath,
   SIGN_IN_PATH,
 } from "@/lib/auth-routes";
-import { getSessionCookie } from "better-auth/cookies";
 import { NextRequest, NextResponse } from "next/server";
 
 function redirectToSignIn(request: NextRequest, pathname: string) {
@@ -16,6 +16,11 @@ function redirectToSignIn(request: NextRequest, pathname: string) {
   return NextResponse.redirect(signInUrl);
 }
 
+function getPostAuthRedirectPath(request: NextRequest): string {
+  const callbackUrl = request.nextUrl.searchParams.get("callbackUrl");
+  return getSafeCallbackPath(callbackUrl);
+}
+
 export async function handleAuthProxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -23,13 +28,16 @@ export async function handleAuthProxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const session = getSessionCookie(request);
-
-  if (isAuthPath(pathname) && session) {
-    return NextResponse.redirect(new URL(DEFAULT_AUTH_CALLBACK, request.url));
-  }
+  const session = await auth.api.getSession({
+    headers: request.headers,
+  });
 
   if (isAuthPath(pathname)) {
+    if (session) {
+      const redirectPath = getPostAuthRedirectPath(request);
+      return NextResponse.redirect(new URL(redirectPath, request.url));
+    }
+
     return NextResponse.next();
   }
 
