@@ -1,10 +1,13 @@
 import { ExternalLinkIcon, UnplugIcon } from "lucide-react";
 
 import { GithubIcon } from "@/features/dashboard/components/icons/github-icon";
+import type { GithubInstallationStatus } from "@/features/dashboard/lib/types";
 import {
   statusBadge,
   statusButtonClass,
 } from "@/features/dashboard/lib/status-styles";
+import { getGithubInstallUrl } from "@/features/github/utils/github-app";
+import { disconnectGithubApp } from "@/lib/actions/github";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,9 +19,17 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
-/** Static UI preview — wire install/disconnect when GitHub App backend is ready. */
-export function GithubConnectCard() {
-  const connected = true;
+type GithubConnectCardProps = {
+  userId: string;
+  installation: GithubInstallationStatus;
+};
+
+export function GithubConnectCard({
+  userId,
+  installation,
+}: GithubConnectCardProps) {
+  const { connected, accountLogin } = installation;
+  const installUrl = getGithubInstallUrl(userId);
 
   return (
     <div className="flex flex-1 flex-col gap-6 p-6">
@@ -49,9 +60,7 @@ export function GithubConnectCard() {
                 </CardDescription>
               </div>
             </div>
-            <span
-              className={statusBadge(connected ? "success" : "neutral")}
-            >
+            <span className={statusBadge(connected ? "success" : "neutral")}>
               {connected ? "Connected" : "Not connected"}
             </span>
           </div>
@@ -61,7 +70,7 @@ export function GithubConnectCard() {
             <p className="text-xs text-muted-foreground">
               Installed for{" "}
               <span className="font-medium text-green-700 dark:text-green-400">
-                @acme
+                @{accountLogin}
               </span>
               . The app can read repository metadata and post review comments on
               pull requests.
@@ -76,16 +85,22 @@ export function GithubConnectCard() {
         </CardContent>
         <CardFooter className="flex flex-wrap gap-2">
           {connected ? (
-            <Button
-              type="button"
-              variant="outline"
-              className={statusButtonClass.danger}
-            >
-              <UnplugIcon />
-              Disconnect GitHub App
-            </Button>
+            <form action={disconnectGithubApp}>
+              <Button
+                type="submit"
+                variant="outline"
+                className={statusButtonClass.danger}
+              >
+                <UnplugIcon />
+                Disconnect GitHub App
+              </Button>
+            </form>
           ) : (
-            <Button type="button" className={statusButtonClass.success}>
+            <Button
+              nativeButton={false}
+              render={<a href={installUrl} />}
+              className={statusButtonClass.success}
+            >
               <GithubIcon />
               Install GitHub App
               <ExternalLinkIcon className="size-3 opacity-80" />
