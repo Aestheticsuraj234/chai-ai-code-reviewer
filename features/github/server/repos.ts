@@ -3,6 +3,14 @@ import { getGithubApp } from "@/features/github/utils/github-app";
 
 const REPOS_PER_PAGE = 100;
 
+function getRepoVisibility(isPrivate?: boolean): GithubRepo["visibility"] {
+  if (isPrivate) {
+    return "private";
+  }
+
+  return "public";
+}
+
 export type InstallationReposPage = {
   repos: GithubRepo[];
   totalCount: number;
@@ -24,7 +32,7 @@ function mapRepo(repo: {
     id: String(repo.id),
     name: repo.name,
     fullName: repo.full_name,
-    visibility: repo.private ? "private" : "public",
+    visibility: getRepoVisibility(repo.private),
     defaultBranch: repo.default_branch ?? "main",
     updatedAt: repo.updated_at ?? new Date().toISOString(),
     language: repo.language ?? null,

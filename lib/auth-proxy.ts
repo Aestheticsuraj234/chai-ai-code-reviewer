@@ -7,6 +7,15 @@ import {
 import { getSessionCookie } from "better-auth/cookies";
 import { NextRequest, NextResponse } from "next/server";
 
+function redirectToSignIn(request: NextRequest, pathname: string) {
+  const signInUrl = new URL(SIGN_IN_PATH, request.url);
+  signInUrl.searchParams.set(
+    "callbackUrl",
+    `${pathname}${request.nextUrl.search}`
+  );
+  return NextResponse.redirect(signInUrl);
+}
+
 export async function handleAuthProxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -16,22 +25,16 @@ export async function handleAuthProxy(request: NextRequest) {
 
   const session = getSessionCookie(request);
 
+  if (isAuthPath(pathname) && session) {
+    return NextResponse.redirect(new URL(DEFAULT_AUTH_CALLBACK, request.url));
+  }
+
   if (isAuthPath(pathname)) {
-    if (session) {
-      return NextResponse.redirect(
-        new URL(DEFAULT_AUTH_CALLBACK, request.url)
-      );
-    }
     return NextResponse.next();
   }
 
   if (!session) {
-    const signInUrl = new URL(SIGN_IN_PATH, request.url);
-    signInUrl.searchParams.set(
-      "callbackUrl",
-      `${pathname}${request.nextUrl.search}`
-    );
-    return NextResponse.redirect(signInUrl);
+    return redirectToSignIn(request, pathname);
   }
 
   return NextResponse.next();
