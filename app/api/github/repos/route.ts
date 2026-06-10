@@ -1,5 +1,6 @@
 import { getUserInstallationId } from "@/features/github/server/installation";
 import { getInstallationReposPage } from "@/features/github/server/repos";
+import { getRepoSyncStatuses } from "@/features/repo-sync/server/sync-status";
 import { getServerSession } from "@/lib/auth-session";
 import { NextResponse } from "next/server";
 
@@ -21,5 +22,13 @@ export async function GET(request: Request) {
 
   const data = await getInstallationReposPage(installationId, page);
 
-  return NextResponse.json(data);
+  const repoFullNames = data.repos.map((repo) => repo.fullName);
+  const syncStatuses = await getRepoSyncStatuses(repoFullNames);
+
+  const repos = data.repos.map((repo) => ({
+    ...repo,
+    syncStatus: syncStatuses[repo.fullName] ?? null,
+  }));
+
+  return NextResponse.json({ ...data, repos });
 }

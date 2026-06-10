@@ -41,6 +41,38 @@ model GithubInstallation {
   @@map("github_installation")
 }
 
+model PullRequest {
+  id             String   @id @default(cuid())
+  installationId Int
+  repoFullName   String
+  prNumber       Int
+  title          String
+  authorLogin    String?
+  headSha        String
+  baseBranch     String
+  status         String   @default("pending")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([repoFullName, prNumber])
+  @@map("pull_request")
+}
+
+model RepoSync {
+  id             String    @id @default(cuid())
+  installationId Int
+  repoFullName   String
+  branch         String
+  status         String    @default("pending")
+  chunkCount     Int       @default(0)
+  syncedAt       DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@unique([repoFullName])
+  @@map("repo_sync")
+}
+
 model Session {
   id        String   @id
   expiresAt DateTime

@@ -7,7 +7,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import type { DashboardRepo } from "@/features/dashboard/lib/types";
 import { statusBadge } from "@/features/dashboard/lib/status-styles";
-import type { InstallationReposPage } from "@/features/github/server/repos";
+import { githubReposInfiniteQuery } from "@/features/github/lib/repos-query";
+import { SyncRepoButton } from "@/features/repo-sync/components/sync-repo-button";
 import { Input } from "@/components/ui/input";
 import {
   Table,
@@ -20,24 +21,6 @@ import {
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 type RepoFilter = "all" | "public" | "private";
-
-async function fetchReposPage(page: number): Promise<InstallationReposPage> {
-  const response = await fetch(`/api/github/repos?page=${page}`);
-
-  if (!response.ok) {
-    throw new Error("Failed to load repositories");
-  }
-
-  return response.json();
-}
-
-function getNextPageParam(lastPage: InstallationReposPage) {
-  if (lastPage.hasMore) {
-    return lastPage.page + 1;
-  }
-
-  return undefined;
-}
 
 function doesRepoMatchFilter(
   repo: DashboardRepo,
@@ -53,6 +36,12 @@ function doesRepoMatchFilter(
 function doesRepoMatchSearch(repo: DashboardRepo, search: string): boolean {
   const query = search.toLowerCase();
   return repo.fullName.toLowerCase().includes(query);
+}
+
+function sortByLatestUpdated(repos: DashboardRepo[]): DashboardRepo[] {
+  return [...repos].sort((a, b) => {
+    return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+  });
 }
 
 function getVisibilityBadgeTone(
@@ -74,18 +63,18 @@ function VisibilityIcon({ visibility }: { visibility: DashboardRepo["visibility"
 }
 
 function ReposTableBody({
-  isLoading,
+  showLoading,
   isError,
   repos,
 }: {
-  isLoading: boolean;
+  showLoading: boolean;
   isError: boolean;
   repos: DashboardRepo[];
 }) {
-  if (isLoading) {
+  if (showLoading) {
     return (
       <TableRow>
-        <TableCell colSpan={6} className="text-center text-muted-foreground">
+        <TableCell colSpan={7} className="text-center text-muted-foreground">
           Loading repositories…
         </TableCell>
       </TableRow>
@@ -95,7 +84,7 @@ function ReposTableBody({
   if (isError) {
     return (
       <TableRow>
-        <TableCell colSpan={6} className="text-center text-muted-foreground">
+        <TableCell colSpan={7} className="text-center text-muted-foreground">
           Failed to load repositories.
         </TableCell>
       </TableRow>
@@ -105,7 +94,7 @@ function ReposTableBody({
   if (repos.length === 0) {
     return (
       <TableRow>
-        <TableCell colSpan={6} className="text-center text-muted-foreground">
+        <TableCell colSpan={7} className="text-center text-muted-foreground">
           No repositories found.
         </TableCell>
       </TableRow>
@@ -156,20 +145,24 @@ export function ReposList() {
   const [search, setSearch] = useState("");
   const loadMoreRef = useRef<HTMLDivElement>(null);
 
-  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading, isError } =
-    useInfiniteQuery({
-      queryKey: ["github-repos"],
-      queryFn: ({ pageParam }) => fetchReposPage(pageParam),
-      initialPageParam: 1,
-      getNextPageParam,
-    });
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isPending,
+    isError,
+  } = useInfiniteQuery(githubReposInfiniteQuery);
+
+  const showLoading = isPending && !data;
 
   const repos = useMemo(() => {
     if (!data) {
       return [];
     }
 
-    return data.pages.flatMap((page) => page.repos);
+    const loadedRepos = data.pages.flatMap((page) => page.repos);
+    return sortByLatestUpdated(loadedRepos);
   }, [data]);
 
   const totalCount = data?.pages[0]?.totalCount ?? 0;
@@ -242,11 +235,12 @@ export function ReposList() {
               <TableHead>Language</TableHead>
               <TableHead className="text-right">Stars</TableHead>
               <TableHead className="text-right">Updated</TableHead>
+              <TableHead className="text-right">Codebase</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             <ReposTableBody
-              isLoading={isLoading}
+              showLoading={showLoading}
               isError={isError}
               repos={filteredRepos}
             />
@@ -294,6 +288,13 @@ function RepoRow({ repo }: { repo: DashboardRepo }) {
       </TableCell>
       <TableCell className="text-right text-muted-foreground">
         {formatDistanceToNow(new Date(repo.updatedAt), { addSuffix: true })}
+      </TableCell>
+      <TableCell className="text-right">
+        <SyncRepoButton
+          repoFullName={repo.fullName}
+          branch={repo.defaultBranch}
+          syncStatus={repo.syncStatus ?? null}
+        />
       </TableCell>
     </TableRow>
   );

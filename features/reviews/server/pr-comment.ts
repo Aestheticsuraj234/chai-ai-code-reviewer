@@ -1,0 +1,18 @@
+import { getGithubApp } from "@/features/github/utils/github-app";
+import { splitRepoFullName } from "@/features/reviews/utils/repo-name";
+
+export async function postPrComment(
+  installationId: number,
+  repoFullName: string,
+  prNumber: number,
+  body: string
+) {
+  const app = getGithubApp();
+  const octokit = await app.getInstallationOctokit(installationId);
+  const { owner, repo } = splitRepoFullName(repoFullName);
+
+  await octokit.request(
+    "POST /repos/{owner}/{repo}/issues/{issue_number}/comments",
+    { owner, repo, issue_number: prNumber, body }
+  );
+}
