@@ -1,5 +1,10 @@
 import type { UserSubscription } from "@/features/dashboard/lib/types";
 
+export type UsageSummary = {
+  used: number;
+  limit: number | null;
+};
+
 export type SettingsProfile = {
   name: string;
   email: string;
@@ -10,5 +15,5 @@ export type SettingsProfile = {
 export type UserSettings = {
   profile: SettingsProfile;
   subscription: UserSubscription;
-  billingPortalUrl: string | null;
+  usage: UsageSummary;
 };

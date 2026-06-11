@@ -22,7 +22,7 @@ export default async function DashboardSettingsPage() {
       <SettingsContent
         profile={settings.profile}
         subscription={settings.subscription}
-        billingPortalUrl={settings.billingPortalUrl}
+        usage={settings.usage}
       />
     </>
   );

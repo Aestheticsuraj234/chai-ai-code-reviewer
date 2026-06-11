@@ -56,6 +56,14 @@ function PullRequestMeta({ pullRequest }: { pullRequest: PullRequestItem }) {
 }
 
 function AiReviewAccordion({ pullRequest }: { pullRequest: PullRequestItem }) {
+  if (pullRequest.status === "rate_limited") {
+    return (
+      <p className="text-xs text-muted-foreground">
+        Monthly review limit reached — upgrade to Pro for unlimited reviews.
+      </p>
+    );
+  }
+
   if (!pullRequest.reviewComment) {
     return (
       <p className="text-xs text-muted-foreground">

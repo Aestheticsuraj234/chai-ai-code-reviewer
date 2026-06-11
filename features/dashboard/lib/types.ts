@@ -20,7 +20,7 @@ export type GithubInstallationStatus = {
   installedAt: string | null;
 };
 
-export type SubscriptionPlan = "free" | "pro" | "team";
+export type SubscriptionPlan = "free" | "pro";
 
 export type UserSubscription = {
   plan: SubscriptionPlan;

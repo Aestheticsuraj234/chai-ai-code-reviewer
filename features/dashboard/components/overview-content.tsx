@@ -88,10 +88,25 @@ type StatCard = {
   accent?: "success" | "info";
 };
 
+function getReviewsStat(overview: OverviewData) {
+  if (overview.reviewsLimit === null) {
+    return {
+      value: String(overview.reviewsUsed),
+      description: "Unlimited reviews on Pro",
+    };
+  }
+
+  return {
+    value: `${overview.reviewsUsed} / ${overview.reviewsLimit}`,
+    description: "AI reviews used this month",
+  };
+}
+
 function buildStats(overview: OverviewData): StatCard[] {
   const repoStat = getRepositoriesStat(overview.repos);
   const githubStat = getGithubStat(overview.installation);
   const planLabel = PLAN_DETAILS[overview.plan].label;
+  const reviewsStat = getReviewsStat(overview);
 
   return [
     {
@@ -102,9 +117,9 @@ function buildStats(overview: OverviewData): StatCard[] {
       accent: repoStat.accent,
     },
     {
-      title: "Reviews this week",
-      value: String(overview.reviewsThisWeek),
-      description: "AI PR reviews (coming soon)",
+      title: "Reviews this month",
+      value: reviewsStat.value,
+      description: reviewsStat.description,
       icon: GitPullRequestIcon,
     },
     {

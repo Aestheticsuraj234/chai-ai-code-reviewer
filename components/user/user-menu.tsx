@@ -19,8 +19,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-/** Hardcoded until billing is wired up. */
-const DEFAULT_PLAN = "Pro";
+const DEFAULT_PLAN = "Free";
 
 export type UserMenuUser = {
   name?: string | null;

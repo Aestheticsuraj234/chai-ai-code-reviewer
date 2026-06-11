@@ -1,7 +1,8 @@
 import type { UserSettings } from "@/features/settings/types/settings";
+import { getUsageSummary } from "@/features/billing/server/usage";
 import { prisma } from "@/lib/db";
 
-import { getBillingPortalUrl, getUserSubscription } from "./subscription";
+import { getUserSubscription } from "./subscription";
 
 export async function getUserSettings(userId: string): Promise<UserSettings> {
   const user = await prisma.user.findUnique({
@@ -19,6 +20,7 @@ export async function getUserSettings(userId: string): Promise<UserSettings> {
   }
 
   const subscription = await getUserSubscription(userId);
+  const usage = await getUsageSummary(userId);
 
   return {
     profile: {
@@ -28,6 +30,6 @@ export async function getUserSettings(userId: string): Promise<UserSettings> {
       memberSince: user.createdAt.toISOString(),
     },
     subscription,
-    billingPortalUrl: getBillingPortalUrl(),
+    usage,
   };
 }

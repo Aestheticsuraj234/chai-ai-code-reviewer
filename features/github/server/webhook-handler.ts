@@ -1,3 +1,6 @@
+import { markPullRequestRateLimited } from "@/features/billing/server/apply-rate-limit";
+import { canUserReview } from "@/features/billing/server/usage";
+import { getUserIdByInstallationId } from "@/features/github/server/installation";
 import { getGithubApp } from "@/features/github/utils/github-app";
 import type { PullRequestWebhookPayload } from "@/features/reviews/types/review";
 import { savePullRequest } from "@/features/reviews/server/save-pull-request";
@@ -34,6 +37,16 @@ export async function handleGithubWebhook(request: Request) {
   }
 
   const pullRequest = await savePullRequest(event);
+
+  const userId = await getUserIdByInstallationId(event.installation.id);
+  if (userId) {
+    const allowed = await canUserReview(userId);
+    if (!allowed) {
+      await markPullRequestRateLimited(pullRequest.id);
+      return Response.json({ received: true, rateLimited: true });
+    }
+  }
+
   await triggerReviewJob(pullRequest.id);
 
   return Response.json({ received: true });
