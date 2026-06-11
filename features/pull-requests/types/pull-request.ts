@@ -1,4 +1,8 @@
-export type PullRequestStatus = "pending" | "processing" | "reviewed";
+export type PullRequestStatus =
+  | "pending"
+  | "processing"
+  | "reviewed"
+  | "rate_limited";
 
 export type PullRequestItem = {
   id: string;

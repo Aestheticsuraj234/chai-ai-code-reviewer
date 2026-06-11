@@ -71,6 +71,19 @@ export async function deleteInstallation(userId: string) {
   await prisma.githubInstallation.delete({ where: { userId } });
 }
 
+export async function getUserIdByInstallationId(installationId: number) {
+  const installation = await prisma.githubInstallation.findFirst({
+    where: { installationId },
+    select: { userId: true },
+  });
+
+  if (!installation) {
+    return null;
+  }
+
+  return installation.userId;
+}
+
 export async function getUserInstallationId(userId: string) {
   const installation = await prisma.githubInstallation.findUnique({
     where: { userId },

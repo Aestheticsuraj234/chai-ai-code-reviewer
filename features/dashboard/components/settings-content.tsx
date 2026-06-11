@@ -1,19 +1,22 @@
 "use client";
 
 import { format } from "date-fns";
-import Link from "next/link";
 
+import { CancelSubscriptionButton } from "@/features/billing/components/cancel-subscription-button";
+import { UpgradeButton } from "@/features/billing/components/upgrade-button";
 import {
   getDisplayName,
   getInitials,
 } from "@/components/user/user-menu";
-import { statusBadge, statusButtonClass } from "@/features/dashboard/lib/status-styles";
+import { statusBadge } from "@/features/dashboard/lib/status-styles";
 import type { UserSubscription } from "@/features/dashboard/lib/types";
 import { PLAN_DETAILS } from "@/features/settings/lib/plan-details";
-import type { SettingsProfile } from "@/features/settings/types/settings";
+import type {
+  SettingsProfile,
+  UsageSummary,
+} from "@/features/settings/types/settings";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -30,7 +33,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 type SettingsContentProps = {
   profile: SettingsProfile;
   subscription: UserSubscription;
-  billingPortalUrl: string | null;
+  usage: UsageSummary;
 };
 
 function formatRenewalDate(renewsAt: string | null): string | null {
@@ -107,12 +110,20 @@ function ProfileTab({ profile }: { profile: SettingsProfile }) {
   );
 }
 
+function getUsageText(usage: UsageSummary): string {
+  if (usage.limit === null) {
+    return `${usage.used} reviews used this month (unlimited)`;
+  }
+
+  return `${usage.used} / ${usage.limit} reviews used this month`;
+}
+
 function SubscriptionTab({
   subscription,
-  billingPortalUrl,
+  usage,
 }: {
   subscription: UserSubscription;
-  billingPortalUrl: string | null;
+  usage: UsageSummary;
 }) {
   const planDetails = PLAN_DETAILS[subscription.plan];
   const renewalDate = formatRenewalDate(subscription.renewsAt);
@@ -169,6 +180,7 @@ function SubscriptionTab({
           </div>
           <span className={statusBadge(badgeTone)}>{planDetails.label}</span>
         </div>
+        <p className="text-xs text-muted-foreground">{getUsageText(usage)}</p>
         <ul className="space-y-2 text-xs text-muted-foreground">
           {planDetails.features.map((feature) => (
             <li key={feature}>{feature}</li>
@@ -176,34 +188,12 @@ function SubscriptionTab({
         </ul>
       </CardContent>
       <CardFooter className="flex flex-wrap gap-2">
-        {billingPortalUrl ? (
-          <Button
-            nativeButton={false}
-            render={<Link href={billingPortalUrl} target="_blank" />}
-            variant="outline"
-            className={cn(statusButtonClass.success, "border-green-500/50")}
-          >
-            Manage billing
-          </Button>
-        ) : (
-          <Button
-            variant="outline"
-            disabled
-            className={cn(statusButtonClass.success, "border-green-500/50")}
-          >
-            Manage billing
-          </Button>
-        )}
-        <Button variant="ghost" disabled>
-          Change plan
-        </Button>
-        <Button
-          variant="outline"
-          disabled={subscription.status === "canceled"}
-          className={statusButtonClass.danger}
-        >
-          Cancel subscription
-        </Button>
+        {subscription.plan === "free" ? <UpgradeButton /> : null}
+        {subscription.plan === "pro" ? (
+          <CancelSubscriptionButton
+            disabled={subscription.status === "canceled"}
+          />
+        ) : null}
       </CardFooter>
     </Card>
   );
@@ -212,7 +202,7 @@ function SubscriptionTab({
 export function SettingsContent({
   profile,
   subscription,
-  billingPortalUrl,
+  usage,
 }: SettingsContentProps) {
   return (
     <div className="flex flex-1 flex-col p-6">
@@ -227,10 +217,7 @@ export function SettingsContent({
         </TabsContent>
 
         <TabsContent value="subscription" className="mt-6 space-y-6">
-          <SubscriptionTab
-            subscription={subscription}
-            billingPortalUrl={billingPortalUrl}
-          />
+          <SubscriptionTab subscription={subscription} usage={usage} />
         </TabsContent>
       </Tabs>
     </div>

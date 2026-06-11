@@ -1,26 +1,32 @@
 import type { OverviewData } from "@/features/overview/types/overview";
+import { getUsageSummary } from "@/features/billing/server/usage";
 import {
   getInstallationStatus,
   getUserInstallationId,
 } from "@/features/github/server/installation";
 import { getUserSubscription } from "@/features/settings/server/subscription";
 
-import { getRecentReviewActivity, getReviewsThisWeek } from "./activity";
+import { getRecentReviewActivity } from "./activity";
 import { getInstallationRepoSummary } from "./repo-summary";
 
 export async function getOverview(userId: string): Promise<OverviewData> {
   const installation = await getInstallationStatus(userId);
   const subscription = await getUserSubscription(userId);
-  const reviewsThisWeek = await getReviewsThisWeek(userId);
+  const usage = await getUsageSummary(userId);
   const recentActivity = await getRecentReviewActivity(userId);
+
+  const base = {
+    installation,
+    reviewsUsed: usage.used,
+    reviewsLimit: usage.limit,
+    plan: subscription.plan,
+    recentActivity,
+  };
 
   if (!installation.connected) {
     return {
-      installation,
+      ...base,
       repos: null,
-      reviewsThisWeek,
-      plan: subscription.plan,
-      recentActivity,
     };
   }
 
@@ -28,21 +34,15 @@ export async function getOverview(userId: string): Promise<OverviewData> {
 
   if (!installationId) {
     return {
-      installation,
+      ...base,
       repos: null,
-      reviewsThisWeek,
-      plan: subscription.plan,
-      recentActivity,
     };
   }
 
   const repos = await getInstallationRepoSummary(installationId);
 
   return {
-    installation,
+    ...base,
     repos,
-    reviewsThisWeek,
-    plan: subscription.plan,
-    recentActivity,
   };
 }

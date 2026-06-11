@@ -26,7 +26,8 @@ export type OverviewActivityItem = {
 export type OverviewData = {
   installation: GithubInstallationStatus;
   repos: OverviewRepoSummary | null;
-  reviewsThisWeek: number;
+  reviewsUsed: number;
+  reviewsLimit: number | null;
   plan: SubscriptionPlan;
   recentActivity: OverviewActivityItem[];
 };

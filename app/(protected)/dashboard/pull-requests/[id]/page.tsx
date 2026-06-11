@@ -30,7 +30,22 @@ export const metadata: Metadata = {
   title: "Pull Request Review · Dashboard",
 };
 
-function ReviewBody({ review }: { review: string | null }) {
+function ReviewBody({
+  review,
+  status,
+}: {
+  review: string | null;
+  status: PullRequestStatus;
+}) {
+  if (status === "rate_limited") {
+    return (
+      <p className="text-sm text-muted-foreground">
+        Monthly review limit reached. Upgrade to Pro for unlimited reviews, or
+        wait until next month when your limit resets.
+      </p>
+    );
+  }
+
   if (!review) {
     return (
       <p className="text-sm text-muted-foreground">
@@ -130,7 +145,7 @@ export default async function PullRequestDetailPage({
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <ReviewBody review={pullRequest.reviewComment} />
+            <ReviewBody review={pullRequest.reviewComment} status={status} />
           </CardContent>
         </Card>
       </div>
