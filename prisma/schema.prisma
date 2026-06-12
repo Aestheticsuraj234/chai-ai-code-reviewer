@@ -1,7 +1,5 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
+// Prisma schema — single source of truth for PostgreSQL tables.
+// Run `npx prisma migrate dev` after changes; client is generated to lib/generated/prisma.
 
 generator client {
   provider = "prisma-client"
@@ -12,13 +10,14 @@ datasource db {
   provider = "postgresql"
 }
 
+// App user (Better Auth). Also holds subscription plan fields updated by Razorpay webhooks.
 model User {
   id                     String              @id
   name                   String
   email                  String
   emailVerified          Boolean             @default(false)
   image                  String?
-  plan                   String              @default("free")
+  plan                   String              @default("free") // "free" | "pro"
   razorpaySubscriptionId String?
   subscriptionStatus     String?
   subscriptionRenewsAt   DateTime?
@@ -32,11 +31,12 @@ model User {
   @@map("user")
 }
 
+// Links one dashboard user to their GitHub App installation (used for Octokit API calls).
 model GithubInstallation {
   id             String   @id @default(cuid())
   userId         String   @unique
   user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  installationId Int
+  installationId Int // GitHub's numeric installation id — passed to app.getInstallationOctokit()
   accountLogin   String?
   accountType    String?
   createdAt      DateTime @default(now())
@@ -45,17 +45,18 @@ model GithubInstallation {
   @@map("github_installation")
 }
 
+// One row per PR we've seen via webhook. Drives review history in the dashboard.
 model PullRequest {
   id             String    @id @default(cuid())
   installationId Int
-  repoFullName   String
+  repoFullName   String // e.g. "owner/repo"
   prNumber       Int
   title          String
   authorLogin    String?
-  headSha        String
+  headSha        String // latest commit on the PR branch
   baseBranch     String
-  status         String    @default("pending")
-  reviewComment  String?
+  status         String    @default("pending") // pending | processing | reviewed | rate_limited
+  reviewComment  String? // AI-generated markdown saved after review completes
   reviewedAt     DateTime?
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
@@ -64,12 +65,13 @@ model PullRequest {
   @@map("pull_request")
 }
 
+// Tracks optional full-repo sync jobs (Pinecone codebase namespace). One row per repo.
 model RepoSync {
   id             String    @id @default(cuid())
   installationId Int
   repoFullName   String
   branch         String
-  status         String    @default("pending")
+  status         String    @default("pending") // pending | syncing | synced | failed
   chunkCount     Int       @default(0)
   syncedAt       DateTime?
   createdAt      DateTime  @default(now())
@@ -79,6 +81,7 @@ model RepoSync {
   @@map("repo_sync")
 }
 
+// Better Auth session — browser cookie maps to this row.
 model Session {
   id        String   @id
   expiresAt DateTime
@@ -95,6 +98,7 @@ model Session {
   @@map("session")
 }
 
+// Better Auth OAuth account (GitHub tokens stored here).
 model Account {
   id                    String    @id
   accountId             String
@@ -115,6 +119,7 @@ model Account {
   @@map("account")
 }
 
+// Better Auth email/OTP verification tokens.
 model Verification {
   id         String   @id
   identifier String

@@ -1,3 +1,10 @@
+/**
+ * Sign-in page — GitHub OAuth entry point.
+ *
+ * Reads an optional `callbackUrl` search param so flows like GitHub App
+ * installation can return the user to the right place after authentication.
+ */
+
 import Image from "next/image";
 import type { Metadata } from "next";
 import { GithubSignInForm } from "@/components/auth/github-sign-in-form";
@@ -24,6 +31,12 @@ type SignInPageProps = {
   searchParams: Promise<{ callbackUrl?: string }>;
 };
 
+/**
+ * Renders the sign-in card with logo and GitHub OAuth button.
+ *
+ * @param searchParams - Async search params (Next.js 15+) with optional `callbackUrl`.
+ * @returns The sign-in page UI inside the auth layout.
+ */
 export default async function SignInPage({ searchParams }: SignInPageProps) {
   const { callbackUrl } = await searchParams;
 

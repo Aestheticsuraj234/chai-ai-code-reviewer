@@ -1,3 +1,11 @@
+/**
+ * GitHub OAuth sign-in form for the `/sign-in` page.
+ *
+ * Uses a React Server Action (`signInWithGithub`) as the form action so
+ * the redirect to GitHub happens server-side. `useFormStatus` drives the
+ * loading state on the submit button during the redirect.
+ */
+
 "use client";
 
 import { signInWithGithub } from "@/lib/actions/auth";
@@ -5,6 +13,11 @@ import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { useFormStatus } from "react-dom";
 
+/**
+ * GitHub logo SVG used inside the sign-in button.
+ *
+ * @returns Decorative SVG with `aria-hidden` (button text provides the label).
+ */
 function GitHubIcon() {
   return (
     <svg
@@ -18,6 +31,13 @@ function GitHubIcon() {
   );
 }
 
+/**
+ * Submit button that reflects pending state from the parent `<form>`.
+ *
+ * Must be a child of the form (not the form itself) for `useFormStatus` to work.
+ *
+ * @returns A full-width button that shows a spinner while redirecting.
+ */
 function SubmitButton() {
   const { pending } = useFormStatus();
 
@@ -44,9 +64,16 @@ function SubmitButton() {
 }
 
 type GithubSignInFormProps = {
+  /** Optional post-login redirect path (e.g. GitHub install callback). */
   callbackUrl?: string;
 };
 
+/**
+ * Form that initiates GitHub OAuth sign-in via server action.
+ *
+ * @param callbackUrl - When set, passed as a hidden field so auth can redirect back after login.
+ * @returns A form with one submit button.
+ */
 export function GithubSignInForm({ callbackUrl }: GithubSignInFormProps) {
   return (
     <form action={signInWithGithub} className="w-full">

@@ -1,3 +1,10 @@
+/**
+ * Public landing page (`/`).
+ *
+ * Currently the default Create Next App placeholder. Unauthenticated users
+ * can view this page; `proxy.ts` does not protect `/`. After sign-in, users
+ * are redirected to `/dashboard` via Better Auth callback.
+ */
 import Image from "next/image";
 
 export default function Home() {

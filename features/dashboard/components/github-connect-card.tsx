@@ -1,3 +1,11 @@
+/**
+ * GitHub App connection card on the `/dashboard/github` page.
+ *
+ * Shows whether the user has installed the Chai reviewer GitHub App,
+ * which account it is installed for, and actions to install or disconnect.
+ * Server actions handle disconnect; install links out to GitHub's install flow.
+ */
+
 import { ExternalLinkIcon, UnplugIcon } from "lucide-react";
 
 import { GithubIcon } from "@/features/dashboard/components/icons/github-icon";
@@ -24,6 +32,12 @@ type GithubConnectCardProps = {
   installation: GithubInstallationStatus;
 };
 
+/**
+ * Explains which GitHub account the app is installed on.
+ *
+ * @param accountLogin - GitHub username or org name, or null if unknown.
+ * @returns A short paragraph describing the active installation.
+ */
 function ConnectedDetails({ accountLogin }: { accountLogin: string | null }) {
   return (
     <p className="text-xs text-muted-foreground">
@@ -37,6 +51,11 @@ function ConnectedDetails({ accountLogin }: { accountLogin: string | null }) {
   );
 }
 
+/**
+ * Bullet list of permissions the GitHub App requests before install.
+ *
+ * @returns A list encouraging the user to complete installation.
+ */
 function DisconnectedDetails() {
   return (
     <ul className="list-inside list-disc space-y-1 text-xs text-muted-foreground">
@@ -47,6 +66,11 @@ function DisconnectedDetails() {
   );
 }
 
+/**
+ * Form that submits a server action to remove the GitHub App installation.
+ *
+ * @returns A disconnect button wrapped in a `<form>`.
+ */
 function ConnectedActions() {
   return (
     <form action={disconnectGithubApp}>
@@ -62,6 +86,12 @@ function ConnectedActions() {
   );
 }
 
+/**
+ * External link button that starts the GitHub App installation flow.
+ *
+ * @param installUrl - URL generated with the user's ID for post-install callback.
+ * @returns A link-styled button opening GitHub in the same tab.
+ */
 function DisconnectedActions({ installUrl }: { installUrl: string }) {
   return (
     <Button
@@ -76,6 +106,13 @@ function DisconnectedActions({ installUrl }: { installUrl: string }) {
   );
 }
 
+/**
+ * Picks connected vs disconnected explanatory copy.
+ *
+ * @param connected - Whether an installation exists for this user.
+ * @param accountLogin - GitHub account login when connected.
+ * @returns Either `ConnectedDetails` or `DisconnectedDetails`.
+ */
 function ConnectionDetails({
   connected,
   accountLogin,
@@ -90,6 +127,13 @@ function ConnectionDetails({
   return <DisconnectedDetails />;
 }
 
+/**
+ * Picks install vs disconnect action buttons.
+ *
+ * @param connected - Whether the app is already installed.
+ * @param installUrl - GitHub install URL used when not connected.
+ * @returns Either `ConnectedActions` or `DisconnectedActions`.
+ */
 function ConnectionActions({
   connected,
   installUrl,
@@ -104,13 +148,24 @@ function ConnectionActions({
   return <DisconnectedActions installUrl={installUrl} />;
 }
 
+/**
+ * Main card UI for managing the GitHub App installation.
+ *
+ * Visual styling (green border, badge) changes based on connection state.
+ *
+ * @param userId - Used to build a personalized GitHub install URL.
+ * @param installation - Current connection status from the database.
+ * @returns The full GitHub App settings card.
+ */
 export function GithubConnectCard({
   userId,
   installation,
 }: GithubConnectCardProps) {
   const { connected, accountLogin } = installation;
+  // Install URL encodes userId so the callback can associate the installation
   const installUrl = getGithubInstallUrl(userId);
 
+  // Default to neutral styling; switch to green when connected
   let cardBorderClass = "border-border";
   let iconWrapperClass = "border-border bg-muted";
   let statusTone: "success" | "neutral" = "neutral";

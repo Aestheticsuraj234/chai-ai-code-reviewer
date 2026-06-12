@@ -1,3 +1,10 @@
+/**
+ * Dashboard Overview page body — stat cards, connect banner, and activity feed.
+ *
+ * Receives pre-fetched `OverviewData` from the server page and renders
+ * four summary cards plus a list of recent AI review activity.
+ */
+
 import type { ComponentType } from "react";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
@@ -26,12 +33,19 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
+/** Maps activity status values to badge label and color tone. */
 const ACTIVITY_STATUS = {
   approved: { label: "Approved", tone: "success" as const },
   changes_requested: { label: "Changes requested", tone: "warning" as const },
   rate_limited: { label: "Rate limited", tone: "danger" as const },
 };
 
+/**
+ * Builds the subtitle text under the Repositories stat value.
+ *
+ * @param repos - Repo summary counts, or empty state when total is zero.
+ * @returns A short human-readable description string.
+ */
 function getRepoDescription(repos: OverviewRepoSummary): string {
   if (repos.totalCount === 0) {
     return "No repositories selected for the app";
@@ -44,6 +58,12 @@ function getRepoDescription(repos: OverviewRepoSummary): string {
   return `${repos.publicCount} public · ${repos.privateCount} private`;
 }
 
+/**
+ * Derives display value and description for the GitHub App stat card.
+ *
+ * @param installation - Connection status from `OverviewData`.
+ * @returns Value string, description, and optional success accent.
+ */
 function getGithubStat(installation: OverviewData["installation"]) {
   if (!installation.connected) {
     return {
@@ -64,6 +84,12 @@ function getGithubStat(installation: OverviewData["installation"]) {
   };
 }
 
+/**
+ * Derives display value for the Repositories stat card.
+ *
+ * @param repos - Repo summary or null when GitHub is not connected.
+ * @returns Value, description, and optional info accent.
+ */
 function getRepositoriesStat(repos: OverviewRepoSummary | null) {
   if (!repos) {
     return {
@@ -80,6 +106,7 @@ function getRepositoriesStat(repos: OverviewRepoSummary | null) {
   };
 }
 
+/** Shape of one stat card in the top grid. */
 type StatCard = {
   title: string;
   value: string;
@@ -88,6 +115,12 @@ type StatCard = {
   accent?: "success" | "info";
 };
 
+/**
+ * Formats the "Reviews this month" stat for free vs Pro plans.
+ *
+ * @param overview - Full overview data including usage and plan.
+ * @returns Value and description strings for the reviews stat card.
+ */
 function getReviewsStat(overview: OverviewData) {
   if (overview.reviewsLimit === null) {
     return {
@@ -102,6 +135,12 @@ function getReviewsStat(overview: OverviewData) {
   };
 }
 
+/**
+ * Assembles all four stat cards from overview data.
+ *
+ * @param overview - Server-loaded overview payload.
+ * @returns Array of stat card configs for rendering the grid.
+ */
 function buildStats(overview: OverviewData): StatCard[] {
   const repoStat = getRepositoriesStat(overview.repos);
   const githubStat = getGithubStat(overview.installation);
@@ -139,6 +178,11 @@ function buildStats(overview: OverviewData): StatCard[] {
   ];
 }
 
+/**
+ * Prominent CTA shown when GitHub App is not connected.
+ *
+ * @returns A highlighted card linking to the GitHub App settings page.
+ */
 function ConnectGithubBanner() {
   return (
     <Card className="border-blue-500/25 bg-blue-500/5">
@@ -162,6 +206,12 @@ function ConnectGithubBanner() {
   );
 }
 
+/**
+ * Renders the recent activity list or an empty-state message.
+ *
+ * @param items - Recent review activity rows from the server.
+ * @returns A vertical list of activity entries with status badges.
+ */
 function ActivityList({ items }: { items: OverviewActivityItem[] }) {
   if (items.length === 0) {
     return (
@@ -205,6 +255,12 @@ type OverviewContentProps = {
   overview: OverviewData;
 };
 
+/**
+ * Main Overview page content — stat grid, optional banner, activity card.
+ *
+ * @param overview - Pre-fetched data from `getOverview()`.
+ * @returns The overview page body below `DashboardHeader`.
+ */
 export function OverviewContent({ overview }: OverviewContentProps) {
   const stats = buildStats(overview);
   const showConnectBanner = !overview.installation.connected;

@@ -1,3 +1,12 @@
+/**
+ * Client button to cancel an active Razorpay Pro subscription.
+ *
+ * Calls a server action that talks to Razorpay's API. The user keeps Pro access
+ * until the end of the billing period; usage limits apply again after that.
+ *
+ * @module features/billing/components/cancel-subscription-button
+ */
+
 "use client";
 
 import { useRouter } from "next/navigation";
@@ -9,9 +18,17 @@ import { cancelSubscription } from "@/lib/actions/billing";
 import { Button } from "@/components/ui/button";
 
 type CancelSubscriptionButtonProps = {
+  /** When true, the button cannot be clicked (e.g. already canceled). */
   disabled?: boolean;
 };
 
+/**
+ * Renders a cancel button for the settings / billing UI.
+ *
+ * @param props - Component props.
+ * @param props.disabled - Optional flag to disable the button.
+ * @returns Outline danger-styled button with loading state.
+ */
 export function CancelSubscriptionButton({
   disabled = false,
 }: CancelSubscriptionButtonProps) {

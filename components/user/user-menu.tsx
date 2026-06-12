@@ -1,3 +1,11 @@
+/**
+ * User account dropdown menu — avatar, profile info, sign out.
+ *
+ * Used in the dashboard sidebar and anywhere else a signed-in user trigger
+ * is needed. `UserMenuWithSession` fetches the session client-side via
+ * Better Auth's `useSession` hook.
+ */
+
 "use client";
 
 import { useRouter } from "next/navigation";
@@ -19,14 +27,17 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+/** Default plan label when none is passed from the server. */
 const DEFAULT_PLAN = "Free";
 
+/** Minimal user fields needed to render the menu. */
 export type UserMenuUser = {
   name?: string | null;
   email?: string | null;
   image?: string | null;
 };
 
+/** `compact` — icon-only trigger; `profile` — avatar + name in the trigger. */
 export type UserMenuTriggerVariant = "compact" | "profile";
 
 type UserMenuProps = {
@@ -37,10 +48,22 @@ type UserMenuProps = {
   className?: string;
 };
 
+/**
+ * Resolves a display name from name or email local-part.
+ *
+ * @param user - User object with optional name and email.
+ * @returns Trimmed name, email username, or fallback `"User"`.
+ */
 export function getDisplayName(user: UserMenuUser) {
   return user.name?.trim() || user.email?.split("@")[0] || "User";
 }
 
+/**
+ * Builds two-letter initials for avatar fallback.
+ *
+ * @param user - User object with optional name and email.
+ * @returns Uppercase initials (e.g. `"JD"` for John Doe).
+ */
 export function getInitials(user: UserMenuUser) {
   const source = user.name?.trim() || user.email || "U";
   const parts = source.split(/\s+/).filter(Boolean);
@@ -52,6 +75,13 @@ export function getInitials(user: UserMenuUser) {
   return source.slice(0, 2).toUpperCase();
 }
 
+/**
+ * Avatar with image or initials fallback.
+ *
+ * @param user - User for image URL and initials.
+ * @param size - Avatar size variant from the UI library.
+ * @returns Avatar component.
+ */
 function UserAvatar({
   user,
   size = "default",
@@ -69,6 +99,15 @@ function UserAvatar({
   );
 }
 
+/**
+ * Dropdown menu with user profile header and sign-out action.
+ *
+ * @param user - Signed-in user to display.
+ * @param variant - Trigger style: compact icon or profile with name.
+ * @param plan - Billing plan label in the dropdown badge.
+ * @param className - Extra classes on the trigger wrapper.
+ * @returns Dropdown menu component.
+ */
 export function UserMenu({
   user,
   variant = "profile",
@@ -152,6 +191,14 @@ export function UserMenu({
 
 type UserMenuWithSessionProps = Omit<UserMenuProps, "user">;
 
+/**
+ * User menu that loads the current session client-side.
+ *
+ * Renders nothing while loading or when no session exists.
+ *
+ * @param props - All `UserMenu` props except `user` (session provides it).
+ * @returns `UserMenu` or `null` when unauthenticated.
+ */
 export function UserMenuWithSession(props: UserMenuWithSessionProps) {
   const { data: session, isPending } = authClient.useSession();
 

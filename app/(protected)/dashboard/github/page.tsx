@@ -1,3 +1,10 @@
+/**
+ * GitHub App settings page (`/dashboard/github`).
+ *
+ * Lets users install or disconnect the Chai reviewer GitHub App and see
+ * which account the app is installed on.
+ */
+
 import type { Metadata } from "next";
 
 import { DashboardHeader } from "@/features/dashboard/components/dashboard-header";
@@ -9,6 +16,11 @@ export const metadata: Metadata = {
   title: "GitHub App · Dashboard",
 };
 
+/**
+ * GitHub App connection management page.
+ *
+ * @returns Header and install/disconnect card for the current user.
+ */
 export default async function DashboardGithubPage() {
   const session = await requireAuth();
   const installation = await getInstallationStatus(session.user.id);

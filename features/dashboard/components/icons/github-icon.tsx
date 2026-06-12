@@ -1,9 +1,22 @@
+/**
+ * Inline SVG icon for the GitHub logo.
+ *
+ * Uses `currentColor` so the icon inherits text color from its parent —
+ * handy when the same icon appears on green buttons, muted labels, etc.
+ */
+
 import { cn } from "@/lib/utils";
 
 type GithubIconProps = {
   className?: string;
 };
 
+/**
+ * Renders the GitHub mark as an accessible, decorative SVG.
+ *
+ * @param className - Optional size or color overrides (defaults to `size-4`).
+ * @returns An SVG element with `aria-hidden` since it accompanies visible text.
+ */
 export function GithubIcon({ className }: GithubIconProps) {
   return (
     <svg

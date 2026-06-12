@@ -1,3 +1,10 @@
+/**
+ * Fetches indexable source files from a GitHub repository branch.
+ *
+ * First step of repo sync: walk the git tree, filter to code-like paths,
+ * download blob contents, then hand files to `chunkRepoFiles`. Filters keep
+ * the Pinecone index small and within starter-tier limits.
+ */
 import type { RepoFile } from "@/features/repo-sync/types/repo-sync";
 import { getGithubApp } from "@/features/github/utils/github-app";
 import { splitRepoFullName } from "@/features/reviews/utils/repo-name";
@@ -7,6 +14,7 @@ import { splitRepoFullName } from "@/features/reviews/utils/repo-name";
 const MAX_FILE_SIZE_BYTES = 100_000;
 const MAX_FILES = 200;
 
+/** File extensions we consider worth embedding for code review context */
 const CODE_EXTENSIONS = [
   ".ts",
   ".tsx",
@@ -33,6 +41,7 @@ const CODE_EXTENSIONS = [
   ".yaml",
 ];
 
+/** Paths inside these folders are never indexed (deps, build output, etc.) */
 const SKIPPED_FOLDERS = [
   "node_modules/",
   "dist/",
@@ -49,14 +58,28 @@ type TreeEntry = {
   size?: number;
 };
 
+/**
+ * @param path - Repository-relative file path
+ * @returns True if the path ends with a known code extension
+ */
 function hasCodeExtension(path: string) {
   return CODE_EXTENSIONS.some((extension) => path.endsWith(extension));
 }
 
+/**
+ * @param path - Repository-relative file path
+ * @returns True if the path lives under a skipped directory
+ */
 function isSkippedPath(path: string) {
   return SKIPPED_FOLDERS.some((folder) => path.includes(folder));
 }
 
+/**
+ * Decides whether a git tree entry should be downloaded and chunked.
+ *
+ * @param entry - Single node from GitHub's recursive tree API
+ * @returns True for small, text-like blobs in allowed folders
+ */
 function isIndexableFile(entry: TreeEntry) {
   if (entry.type !== "blob" || !entry.path || !entry.sha) {
     return false;
@@ -73,6 +96,17 @@ function isIndexableFile(entry: TreeEntry) {
   return hasCodeExtension(entry.path);
 }
 
+/**
+ * Downloads up to `MAX_FILES` indexable files from a branch.
+ *
+ * Uses the recursive git tree endpoint, then fetches each blob's base64
+ * content and decodes to UTF-8 strings for chunking.
+ *
+ * @param installationId - GitHub App installation id
+ * @param repoFullName - Repository in `owner/repo` form
+ * @param branch - Branch name or commit sha for the tree root
+ * @returns Array of `{ filePath, content }` for `chunkRepoFiles`
+ */
 export async function getRepoFiles(
   installationId: number,
   repoFullName: string,

@@ -1,57 +1,27 @@
+/**
+ * TanStack Query (React Query) provider for client-side data fetching.
+ *
+ * Wraps the dashboard subtree so components like `ReposList` can use
+ * `useInfiniteQuery` and other hooks. The `QueryClient` is created once
+ * per mount via `useState` to avoid recreating it on every render.
+ */
+
 "use client";
 
-import { QueryClient } from "@tanstack/react-query";
-import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
-import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState } from "react";
 
-const QUERY_CACHE_KEY = "chai-code-reviewer-query-cache";
-
-// Fresh data is reused without refetching
-const STALE_TIME = 10 * 60 * 1000;
-
-// Keep inactive queries long enough for localStorage restore
-const GC_TIME = 24 * 60 * 60 * 1000;
-
-function buildQueryClient() {
-  return new QueryClient({
-    defaultOptions: {
-      queries: {
-        staleTime: STALE_TIME,
-        gcTime: GC_TIME,
-        retry: 1,
-      },
-    },
-  });
-}
-
-function buildPersister() {
-  if (typeof window === "undefined") {
-    return createSyncStoragePersister({ storage: undefined });
-  }
-
-  return createSyncStoragePersister({
-    storage: window.localStorage,
-    key: QUERY_CACHE_KEY,
-  });
-}
-
+/**
+ * Provides a shared React Query client to descendant components.
+ *
+ * @param children - Client components that need access to query hooks.
+ * @returns `QueryClientProvider` wrapping `{children}`.
+ */
 export function QueryProvider({ children }: { children: React.ReactNode }) {
-  const [queryClient] = useState(buildQueryClient);
-  const [persister] = useState(buildPersister);
+  // Lazy initializer ensures one stable QueryClient instance per provider mount
+  const [queryClient] = useState(() => new QueryClient());
 
   return (
-    <PersistQueryClientProvider
-      client={queryClient}
-      persistOptions={{
-        persister,
-        maxAge: GC_TIME,
-        dehydrateOptions: {
-          shouldDehydrateQuery: (query) => query.state.status === "success",
-        },
-      }}
-    >
-      {children}
-    </PersistQueryClientProvider>
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
 }
