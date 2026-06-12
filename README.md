@@ -131,6 +131,4 @@ lib/                    # Auth, DB, server actions
 prisma/                 # Schema and migrations
 ```
 
-## License
 
-Private project.
