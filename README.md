@@ -1,5 +1,9 @@
 # Chai AI Code Reviewer
 
+<p align="center">
+  <img src="./public/93506170-1cba-4fd5-b466-a1348ad9bd3a.png" alt="Chai AI Code Reviewer — AI Reviews Your PRs" width="100%" />
+</p>
+
 An AI-powered GitHub pull request reviewer that automatically analyzes code changes and posts actionable review comments on your PRs. Connect your GitHub App, and every opened, updated, or reopened pull request gets a structured markdown review — no manual sync required.
 
 ## Description
